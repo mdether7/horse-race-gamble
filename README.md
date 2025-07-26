@@ -1,2 +1,2 @@
 # horse-race-gamble
-Horse racing gambling terminal game.
+Terminal-based horse racing gambling game.
