@@ -40,7 +40,7 @@ namespace Game {
       puts("[3] Your stats");
       puts("[4] Quit");
       if ( mistake ) {
-        puts("Invalid input! Try again.");
+        puts("Invalid input! Try again. [1-4]");
         mistake = false;
       }
       printf("Choose your option: ");
@@ -66,24 +66,57 @@ namespace Game {
     }
   }
 
-//   Player Stats:
-// -------------
-// Balance: $600
-// Total Wins: 3
-// Total Bets: 7
-// Success Rate: 42.8%
+  static void wait_for_enter()
+  {
+    char buf[4];
+    puts("Press Enter to continue...");
+    fgets(buf, sizeof(buf), stdin);
+  }
 
   Phase show_stats(const Player* p)
   {
+    system("clear");
     puts("Player Stats:");
     puts("-------------");
-    printf("Balance: %.2f", p->balance);
-    getchar();
+    printf("Balance: %.2f$\n", p->balance);
+    printf("Total Wins: %d\n", p->total_wins);
+    printf("Total Bets: %d\n", p->total_bets);
+    printf("Success Rate: %.2f\n", p->win_percentage);
+    printf("Biggest Win: %.2f$\n", p->biggest_win);
+    puts("-------------");
+
+    wait_for_enter();
     return Phase::MENU;
-    
   }
 
-  Phase place_bet() { puts("BET"); return Phase::MENU; }
+  //   Available Horses:
+// --------------------------------
+// # | Horse Name   | Odds  | Win %
+// --------------------------------
+// 1 | Thunderbolt  | 4.5x  | 25%
+// 2 | Black Beauty | 3.0x  | 30%
+// 3 | Rusty Rocket | 7.0x  | 10%
+// 4 | Iron Hoof    | 2.8x  | 35%
+// --------------------------------
+
+  static void display_horse_info() {}
+
+  static void display_race_card()
+  {
+    puts("Available Horses:");
+    puts("--------------------------------");
+    puts("# | Horse Name   | Odds  | Win %");
+    puts("--------------------------------");
+
+  }
+
+  Phase place_bet()
+  {
+
+
+    wait_for_enter();
+    return Phase::MENU;
+  }
 
 
 

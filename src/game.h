@@ -14,6 +14,17 @@ namespace Game {
     int total_wins = 0;
   };
 
+  // 1 | Thunderbolt  | 4.5x  | 25%
+  struct Horse
+  {
+    
+  };
+
+  struct GameState
+  {
+    Horse horses[10];
+  };
+
   void start();
   Phase handle_current_phase(Phase current, Player* p);
   Phase start_screen();
