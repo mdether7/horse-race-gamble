@@ -1,6 +1,6 @@
-#include"game.h"
+#include"core.h"
 int main()
 {
-  Game::start();
+  Game::run();
   return 0;
 }

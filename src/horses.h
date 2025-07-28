@@ -9,6 +9,7 @@ struct Horse
 };
 
 Horse* generate_horses(int count);
+void free_horses(Horse* h);
 int total_horse_count();
 
 #endif

@@ -1,4 +1,5 @@
 #include"horses.h"
+
 #include<stdlib.h>
 #include<math.h>
 
@@ -65,8 +66,15 @@ int total_horse_count()
   return TOTAL_HORSE_NUMBER;
 }
 
+void free_horses(Horse* h)
+{
+  if (h) { free(h); }
+}
+
 Horse* generate_horses(int count)
 {
+  if ( count <= 0 || count > TOTAL_HORSE_NUMBER ) { return NULL; }
+
   Horse* horses = (Horse*)malloc(count * sizeof(Horse));
   if (!horses) { return NULL; }
 
