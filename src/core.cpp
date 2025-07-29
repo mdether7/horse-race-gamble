@@ -1,5 +1,6 @@
 #include"core.h"
 #include"horses.h"
+#include"bets.h"
 
 #include<stdlib.h>
 #include<stdio.h>
@@ -18,13 +19,16 @@ namespace Game {
     EXIT, 
   };
 
+  static const int MIN_HORSE_NUMBER = 3;
+
   struct Player
   {
-    float balance = 500.0f;
+    float balance = 500.00f;
     float win_percentage = 0.0f;
     float biggest_win = 0.0f;
     int total_bets = 0;
     int total_wins = 0;
+    Bets* bets = NULL;
   };
 
   struct Context
@@ -32,8 +36,6 @@ namespace Game {
     Horse* horses = NULL;
     int horse_count;
   };
-
-  static const int MIN_HORSE_NUMBER = 3;
 
   static int get_random_int(int min, int max)
   {
@@ -43,11 +45,29 @@ namespace Game {
     return min + random; 
   }
 
-  static void clean_up(Context* c)
+  static int init_bets(Bets* b, int MAX_BETS)
+  {
+    b = create_bets(MAX_BETS);
+    if ( b == NULL ) { return 1; }
+    else { return 0; }
+  }
+
+  static void clean_up_player(Player* p)
+  {
+    destroy_bets(p->bets);
+  }
+
+  static void clean_up_horses(Context* c)
   {
     free_horses(c->horses);
     c->horses = NULL;
     c->horse_count = 0;
+  }
+
+  static void clean_up(Context* c, Player* p)
+  {
+    clean_up_horses(c);
+    clean_up_player(p);
   }
 
   static int horse_gen(Context* c)
@@ -67,7 +87,7 @@ namespace Game {
     // int c;
     // while ((c = getchar()) != '\n' && c != EOF) {}
     char buf[4];
-    puts("Press Enter to continue...");
+    printf("Press Enter to continue... ");
     if ( !fgets(buf, sizeof(buf), stdin) )
     {
       return 1;
@@ -106,6 +126,10 @@ namespace Game {
               c->horses[i].win_percentage);
     }
     puts("--------------------------------");
+    printf("Your Wallet: %.2f$\n", p->balance);
+    puts("--------------------------------");
+
+    printf("Enter horse number you want to bet on: ");
 
     int error = wait_for_enter();
     if ( error ) { return State::EXIT; }
@@ -138,13 +162,13 @@ namespace Game {
     system("clear");
 
     puts("Player Stats:");
-    puts("=============");
+    puts("=================");
     printf("Balance: %.2f$\n", p->balance);
     printf("Total Wins: %d\n", p->total_wins);
     printf("Total Bets: %d\n", p->total_bets);
     printf("Success Rate: %.2f\n", p->win_percentage);
     printf("Biggest Win: %.2f$\n", p->biggest_win);
-    puts("=============");
+    puts("=================");
 
     int error = wait_for_enter();
     if ( error ) { return State::EXIT; }
@@ -153,7 +177,8 @@ namespace Game {
 
   static State handle_menus(Player* p, Context* c) 
   {
-    clean_up(c);
+    clean_up_horses(c); // << here for the debug;
+
     char input[100];
     bool mistake = false;
     while ( true )
@@ -206,15 +231,17 @@ namespace Game {
   void run() 
   {
     srand(time(NULL));
-    Player p;
-    Context c;
 
+    Context c;
+    Player p;
+    init_bets(p.bets, total_horse_count()); // max betting range
+    
     State current = State::INTRO;
     while ( current != State::EXIT ) 
     {
       current = handle_states(current, &p, &c);
     }
-    clean_up(&c);
+    clean_up(&c, &p);
     puts("Thanks for playing!");
   }
 
