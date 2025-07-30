@@ -107,7 +107,7 @@ namespace Game {
   {
     system("clear");
     puts("==============================");
-    puts("=== HORSE BETTING SIM v0.3 ===");
+    puts("=== HORSE BETTING SIM v0.5 ===");
     puts("==============================");
     
     int error = wait_for_enter();
