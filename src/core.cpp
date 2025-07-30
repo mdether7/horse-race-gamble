@@ -319,7 +319,7 @@ namespace Game {
 
     Context c;
     Player p;
-    init_bets(&p.bets, total_horse_count()); // max betting range
+    init_bets(&p.bets, total_horse_count());
     
     State current = State::INTRO;
     while ( current != State::EXIT ) 
