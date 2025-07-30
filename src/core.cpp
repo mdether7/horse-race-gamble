@@ -53,9 +53,9 @@ namespace Game {
     return min + random; 
   }
 
-  static int init_bets(Bets* b, int MAX_BETS)
+  static int init_bets(Bets** b, int MAX_BETS)
   {
-    b = create_bets(MAX_BETS);
+    *b = create_bets(MAX_BETS);
     if ( b == NULL ) { return 1; }
     else { return 0; }
   }
@@ -138,11 +138,6 @@ namespace Game {
     puts("--------------------------------");
   }
 
-// Your Wallet: $500
-// Enter Horse Number to Bet On: 2
-// Enter Bet Amount: 50
-// ➡ Bet of $50 placed on Black Beauty (3.0x odds)
-
   static State betting_screen(Player* p, Context* c)
   {
     if ( !horse_gen(c) ) { return State::EXIT; }
@@ -151,6 +146,7 @@ namespace Game {
     bool mistake = false;
     int horse_choice = 0;
     BetState s = BetState::HORSE_PICK;
+
     while ( s != BetState::DONE )
     {
       system("clear");
@@ -161,7 +157,10 @@ namespace Game {
       {
         int min = 1;
         int max = c->horse_count;
-        if ( mistake ) { puts("Invalid choice, try again."); mistake = false; }
+        if ( mistake ) {
+          puts("Invalid choice, try again."); 
+          mistake = false; 
+        }
         printf("Enter horse number you want to bet on [ %d-%d ]: ", min, max);
         
         if ( !fgets(input, sizeof(input), stdin) ) {
@@ -172,22 +171,62 @@ namespace Game {
         char* end;
         long value = strtol(input, &end, 10);
         if ( value >= min && value <= max ) {
-          horse_choice = value;
-          printf("CHOICE: %d", horse_choice);
+          horse_choice = value - 1;
           s = BetState::AMOUNT_PICK;
         } else {
           mistake = true;
-          continue;
         }
 
       } else if ( s == BetState::AMOUNT_PICK ) {
 
-        puts("HOW MUCH??");
-        s = BetState::DONE;
+        if ( mistake ) {
+          puts("Invalid input, try again."); 
+          mistake = false; 
+        }
+
+        printf("Enter bet amount: ");
+        if ( !fgets(input, sizeof(input), stdin) ) {
+          puts("FGETS ERROR! (CTRL + D probably)");
+          return State::EXIT;
+        }
+
+        for (int i = 0; input[i]; i++) {
+          if ( input[i] == ',' ) { input[i] = '.'; }
+        }
+
+        char* end;
+        double bet = strtod(input, &end);
+        if ( !bet ) { // something went wrong
+          mistake = true;
+          continue;
+        } 
+        bet = (int)(100 * bet) / 100.0; // <- truncutate
+
+        if ( bet > p->balance ) {
+          puts("You don't have enough money!");
+          wait_for_enter();
+          continue;
+        }
+        else if (bet < 0) {
+          puts("You can't bet negative!");
+          wait_for_enter();
+          continue;
+        } else {
+          p->balance -= bet;
+          bets_set(p->bets, bet, horse_choice);
+          bets_print(p->bets);
+          printf("=> Bet of $%.2f placed on %s\n=> [%.2fx odds]\n",
+            bet,
+            c->horses[horse_choice],
+            c->horses[horse_choice].odds); 
+          wait_for_enter();
+          s = BetState::DONE;
+        }                    
       }
     }
     return State::MENU;
   }
+  
 
   static State start_race(Player* p)
   {
@@ -280,7 +319,7 @@ namespace Game {
 
     Context c;
     Player p;
-    init_bets(p.bets, total_horse_count()); // max betting range
+    init_bets(&p.bets, total_horse_count()); // max betting range
     
     State current = State::INTRO;
     while ( current != State::EXIT ) 

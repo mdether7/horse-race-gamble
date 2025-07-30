@@ -13,11 +13,21 @@ void bets_reset(Bets* b)
   }
 }
 
-static void bets_set(Bets* b, float amount, int number)
+void bets_print(Bets* b)
+{
+  printf("[ ");
+  for ( int i = 0; i < b->size; i++ )
+  {
+    printf("%f ", b->bets[i]);
+  }
+  printf(" ]\n");
+}
+
+void bets_set(Bets* b, float amount, int index)
 {
   assert((b != NULL) && "Not expecting nullptr");
-  assert((number >= 0 && number < b->size) && "Bets out of bounds!");
-  b->bets[number] = amount;
+  assert((index >= 0 && index < b->size) && "Bets out of bounds!");
+  b->bets[index] = amount;
 }
 
 Bets* create_bets(int size)
