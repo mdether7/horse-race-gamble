@@ -1,6 +1,7 @@
 #include"bets.h"
 
 #include<stdlib.h>
+#include<stdio.h>
 #include<assert.h>
 
 void bets_reset(Bets* b)
@@ -12,7 +13,7 @@ void bets_reset(Bets* b)
   }
 }
 
-void bets_set(Bets* b, float amount, int number)
+static void bets_set(Bets* b, float amount, int number)
 {
   assert((b != NULL) && "Not expecting nullptr");
   assert((number >= 0 && number < b->size) && "Bets out of bounds!");

@@ -9,7 +9,6 @@ struct Bets
 
 Bets* create_bets(int size);
 void destroy_bets(Bets* b);
-
 void bets_reset(Bets* b);
 
 #endif

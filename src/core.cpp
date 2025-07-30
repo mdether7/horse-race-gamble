@@ -7,6 +7,7 @@
 #include<string.h>
 #include<time.h>
 #include<assert.h>
+#include<cstdlib>
 
 namespace Game {
 
@@ -19,7 +20,12 @@ namespace Game {
     EXIT, 
   };
 
-  static const int MIN_HORSE_NUMBER = 3;
+  enum class BetState
+  {
+    DONE = 0,
+    HORSE_PICK,
+    AMOUNT_PICK
+  };
 
   struct Player
   {
@@ -36,6 +42,8 @@ namespace Game {
     Horse* horses = NULL;
     int horse_count;
   };
+
+  static const int MIN_HORSE_NUMBER = 3;
 
   static int get_random_int(int min, int max)
   {
@@ -107,12 +115,8 @@ namespace Game {
     return State::MENU;
   }
 
-  static State place_bet(Player* p, Context* c)
+  static void show_available_horses(Context* c)
   {
-    system("clear");
-
-    if ( !horse_gen(c) ) { return State::EXIT; }
-
     puts("Available Horses:");
     puts("--------------------------------");
     puts("# | Horse Name   | Odds  | Win %");
@@ -125,23 +129,65 @@ namespace Game {
               c->horses[i].odds,
               c->horses[i].win_percentage);
     }
+  }
+
+  static void show_balance(Player* p)
+  {
     puts("--------------------------------");
     printf("Your Wallet: %.2f$\n", p->balance);
     puts("--------------------------------");
-
-    printf("Enter horse number you want to bet on: ");
-
-    int error = wait_for_enter();
-    if ( error ) { return State::EXIT; }
-    return State::MENU;
   }
 
-  // Your Wallet: $500
+// Your Wallet: $500
+// Enter Horse Number to Bet On: 2
+// Enter Bet Amount: 50
+// ➡ Bet of $50 placed on Black Beauty (3.0x odds)
 
-  // Enter Horse Number to Bet On: 2
-  // Enter Bet Amount: 50
+  static State betting_screen(Player* p, Context* c)
+  {
+    if ( !horse_gen(c) ) { return State::EXIT; }
 
-  // ➡ Bet of $50 placed on Black Beauty (3.0x odds)
+    char input[100];
+    bool mistake = false;
+    int horse_choice = 0;
+    BetState s = BetState::HORSE_PICK;
+    while ( s != BetState::DONE )
+    {
+      system("clear");
+      show_available_horses(c);
+      show_balance(p);
+
+      if ( s == BetState::HORSE_PICK )
+      {
+        int min = 1;
+        int max = c->horse_count;
+        if ( mistake ) { puts("Invalid choice, try again."); mistake = false; }
+        printf("Enter horse number you want to bet on [ %d-%d ]: ", min, max);
+        
+        if ( !fgets(input, sizeof(input), stdin) ) {
+          puts("FGETS ERROR! (CTRL + D probably)");
+          return State::EXIT;
+        }
+
+        char* end;
+        long value = strtol(input, &end, 10);
+        if ( value >= min && value <= max ) {
+          horse_choice = value;
+          printf("CHOICE: %d", horse_choice);
+          s = BetState::AMOUNT_PICK;
+        } else {
+          mistake = true;
+          continue;
+        }
+
+      } else if ( s == BetState::AMOUNT_PICK ) {
+
+        puts("HOW MUCH??");
+        s = BetState::DONE;
+      }
+    }
+    return State::MENU;
+  }
 
   static State start_race(Player* p)
   {
@@ -205,7 +251,7 @@ namespace Game {
         switch (input[0])
         {
           case '1': return State::RACE;
-          case '2': return place_bet(p, c);
+          case '2': return betting_screen(p, c);
           case '3': return show_stats(p);
           case '4': return State::EXIT;
           default: mistake = true; break;

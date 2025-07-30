@@ -10,6 +10,7 @@
         "-g",
         "src/main.cpp",
         "src/core.cpp",
+        "src/bets.cpp",
         "src/horses.cpp",
         "-o",
         "build/main"
