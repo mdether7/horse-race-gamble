@@ -5,7 +5,7 @@
 
 # Folders
 build/
-
+.vscode/
 
 # User-specific files
 *.rsuser
