@@ -263,14 +263,10 @@ namespace Game {
       grid[j] = temp;
     }
 
-    for ( int x = 0; x < 100; x++ )
-    {
-      printf("%d ", grid[x]);
-      if ( (x + 1) % 10 == 0 )
-      {
-        printf("\n");
-      }
-    }
+    int draw = rand() % 100;
+    int winner_horse = grid[draw];
+
+
 
     int error = wait_for_enter();
     if ( error ) { return State::EXIT; }

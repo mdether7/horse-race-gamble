@@ -32,7 +32,7 @@ void bets_set(Bets* b, float amount, int index)
 
 Bets* create_bets(int size)
 {
-  size_t mem_size = sizeof(Bets) + size * sizeof(float);\
+  size_t mem_size = sizeof(Bets) + size * sizeof(float);
 
   Bets* b = (Bets*)malloc(mem_size);
   if ( b == NULL ) {
