@@ -205,14 +205,13 @@ namespace Game {
         if ( bet > p->balance ) {
           puts("You don't have enough money!");
           wait_for_enter();
-          continue;
         }
         else if (bet < 0) {
           puts("You can't bet negative!");
           wait_for_enter();
-          continue;
         } else {
           p->balance -= bet;
+          p->total_bets++;
           bets_set(p->bets, bet, horse_choice);
           bets_print(p->bets);
           printf("=> Bet of $%.2f placed on %s\n=> [%.2fx odds]\n",
@@ -228,9 +227,50 @@ namespace Game {
   }
   
 
-  static State start_race(Player* p)
+  static State start_race(Player* p, Context* c)
   {
     puts("Race started!");
+
+    int total = 0;
+    int percentages[c->horse_count] = {0};
+    for ( int i = 0; i < c->horse_count; i++ ) {
+      percentages[i] = c->horses[i].win_percentage;
+      total += c->horses[i].win_percentage;
+    }
+    assert((total == 100) && "Total is not 100!");
+
+    int grid[100] = {0};
+
+    int sum = 0;
+    int horse_id = 0;
+    total = percentages[horse_id];
+
+    while ( total != 100 ) {
+      grid[sum++] = horse_id;
+      if ( sum >= total ) {
+        total += percentages[++horse_id];
+      }
+    }
+    for ( int i = 0; i < percentages[horse_id]; ++i ) {
+      grid[sum++] = horse_id;
+    }
+
+    // Fisher-Yates shuffle algorithm!
+    for (int i = 99; i > 0; i--) {
+      int j = rand() % (i + 1);
+      int temp = grid[i];
+      grid[i] = grid[j];
+      grid[j] = temp;
+    }
+
+    for ( int x = 0; x < 100; x++ )
+    {
+      printf("%d ", grid[x]);
+      if ( (x + 1) % 10 == 0 )
+      {
+        printf("\n");
+      }
+    }
 
     int error = wait_for_enter();
     if ( error ) { return State::EXIT; }
@@ -251,7 +291,7 @@ namespace Game {
     printf("Balance: %.2f$\n", p->balance);
     printf("Total Wins: %d\n", p->total_wins);
     printf("Total Bets: %d\n", p->total_bets);
-    printf("Success Rate: %.2f\n", p->win_percentage);
+    printf("Success Rate: %.2f\n%", p->win_percentage);
     printf("Biggest Win: %.2f$\n", p->biggest_win);
     puts("=================");
 
@@ -262,7 +302,7 @@ namespace Game {
 
   static State handle_menus(Player* p, Context* c) 
   {
-    clean_up_horses(c); // << here for the debug;
+    // clean_up_horses(c); // << here for the debug;
 
     char input[100];
     bool mistake = false;
@@ -307,7 +347,7 @@ namespace Game {
     {
       case State::INTRO: return intro();
       case State::MENU: return handle_menus(p, c);
-      case State::RACE: return start_race(p);
+      case State::RACE: return start_race(p, c);
       case State::RESULT: return show_results(p);
       default: return intro();
     }
