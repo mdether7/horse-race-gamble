@@ -60,7 +60,12 @@ void player_place_bet(Player* player, int option, int amount)
   player->total_bets++;
 }
 
-void player_pay(Player* player, int amount)
+void player_add_balance(Player* player, int amount)
+{
+
+}
+
+void player_sub_balance(Player* player, int amount)
 {
   if ( !player || amount <= 0 ) {
     return;

@@ -1,5 +1,6 @@
 #include"core.h"
 #include"display.h"
+#include"race.h"
 #include"input.h"
 #include"player.h"
 #include"bet_pool.h"
@@ -27,6 +28,7 @@ namespace Game {
     Bots* bots = nullptr;
     BetPool* pool = nullptr;
     State state = State::INTRO;
+    bool should_regenerate = true;
   };
 
   static bool initialize_game(Context* ctx, int bot_count)
@@ -83,7 +85,10 @@ namespace Game {
 
   static void bet(Context* ctx)
   {
-    regenerate_pool(ctx->pool);
+    if ( ctx->should_regenerate ) {
+      regenerate_pool(ctx->pool);
+      ctx->should_regenerate = false;
+    }
 
     clear_screen();
     display_bet_pool(ctx->pool);
@@ -96,7 +101,7 @@ namespace Game {
     option--; // to array index
 
     player_place_bet(ctx->player, option, amount);
-    player_pay(ctx->player, amount);
+    player_sub_balance(ctx->player, amount);
 
     display_placed_bet(ctx->pool, option, amount);
 
@@ -107,7 +112,23 @@ namespace Game {
 
   static void race(Context* ctx)
   {
-    puts("RACE!");
+    clear_screen();
+    display_race_header();
+    display_countdown();
+
+    int winner = race_determine_winner(ctx->pool);
+
+    printf("1st Place: %s\n", ctx->pool->horses[winner].name);
+    ctx->should_regenerate = true;
+
+    int error = input_wait_for_enter();
+    if ( error ) { ctx->state = State::EXIT; return; }
+    ctx->state = State::RESULT;
+  }
+
+  static void result(Context* ctx)
+  {
+    puts("HERE ARE THE RESULTS!");
 
     int error = input_wait_for_enter();
     if ( error ) { ctx->state = State::EXIT; return; }
@@ -123,7 +144,7 @@ namespace Game {
       case State::BET: bet(ctx); break;
       case State::STATS: stats(ctx); break;
       case State::RACE: race(ctx); break;
-      case State::RESULT: break;
+      case State::RESULT: result(ctx); break;
       default: break;
     }
   }

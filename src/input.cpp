@@ -27,7 +27,7 @@ int input_valid_option(int first, int last)
       printf("Invalid option!\n");
       wrong = false;
     }
-    printf("Choose your option: ");
+    printf("Choose your option [%d-%d]: ", first, last);
 
     if ( !fgets(input, sizeof(input), stdin) ) {
       puts("FGETS ERROR! (CTRL + D probably)");

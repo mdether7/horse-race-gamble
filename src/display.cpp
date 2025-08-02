@@ -1,12 +1,13 @@
 #include"display.h"
 #include"player.h"
 #include"bet_pool.h"
+#include<unistd.h>
 #include<stdio.h>
 
 void display_intro()
 {
   puts("==============================");
-  puts("=== HORSE BETTING SIM v0.5 ===");
+  puts("=== HORSE BETTING SIM v0.7 ===");
   puts("==============================");
 }
 
@@ -32,6 +33,30 @@ void display_player_stats(const Player* player)
   printf("Success Rate: %d%\n", player->win_percentage);
   printf("Biggest Win: %.2f$\n", (double)player->biggest_win / 100);
   puts("=================");
+}
+
+void display_countdown()
+{
+  printf("Get Ready...");
+  fflush(stdout);
+  sleep(1);
+  printf(" 3...");
+  fflush(stdout);
+  sleep(1);
+  printf(" 2...");
+  fflush(stdout);
+  sleep(1);
+  printf(" 1...");
+  fflush(stdout);
+  sleep(1);
+  printf(" GO!\n");
+}
+
+void display_race_header()
+{
+  puts("============================");
+  puts("========= THE RACE =========");
+  puts("============================");
 }
 
 void display_balance(const Player* player)
@@ -72,15 +97,3 @@ void display_bet_pool(const BetPool* pool)
 void clear_screen() {
   printf("\033[2J\033[H");
 }
-
-  // void get_cursor_position(int* rows, int* cols) {
-  //   // Request cursor position
-  //   printf("\033[6n");
-  //   fflush(stdout);
-
-  //   // Expected response: ESC [ rows ; cols R
-  //   if (scanf("\033[%d;%dR", rows, cols) != 2) {
-  //       *rows = -1;
-  //       *cols = -1;
-  //   }
-  // }

@@ -26,7 +26,8 @@ void destroy_player(Player* player);
 void destroy_bots(Bots* bots);
 
 void player_place_bet(Player* player, int option, int amount);
-void player_pay(Player* player, int amount);
+void player_add_balance(Player* player, int amount);
+void player_sub_balance(Player* player, int amount);
 void player_reset_placed_bets(Player* player);
 
 #endif
