@@ -3,6 +3,10 @@ project(HorseBet)
 
 add_executable(${PROJECT_NAME} src/main.cpp
                                src/core.cpp
-                               src/race.cpp
-                               src/horses.cpp
+                               src/horse.cpp
+                               src/bet_pool.cpp
+                               src/display.cpp
+                               src/player.cpp
+                               src/input.cpp
+                               src/rand_utils.cpp
                                src/bets.cpp )

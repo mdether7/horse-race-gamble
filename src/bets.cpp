@@ -1,56 +1,72 @@
 #include"bets.h"
-
 #include<stdlib.h>
-#include<stdio.h>
-#include<assert.h>
-
-void bets_reset(Bets* b)
-{
-  assert((b != NULL) && "Not expecting nullptr");
-  for ( int i = 0; i < b->size; i++ )
-  {
-    b->bets[i] = 0.0f;
-  }
-}
-
-void bets_print(Bets* b)
-{
-  printf("[ ");
-  for ( int i = 0; i < b->size; i++ )
-  {
-    printf("%f ", b->bets[i]);
-  }
-  printf(" ]\n");
-}
-
-void bets_set(Bets* b, float amount, int index)
-{
-  assert((b != NULL) && "Not expecting nullptr");
-  assert((index >= 0 && index < b->size) && "Bets out of bounds!");
-  b->bets[index] = amount;
-}
 
 Bets* create_bets(int size)
 {
-  size_t mem_size = sizeof(Bets) + size * sizeof(float);
+  size_t mem_size = sizeof(Bets) + size * sizeof(int);
 
-  Bets* b = (Bets*)malloc(mem_size);
-  if ( b == NULL ) {
-    return NULL;
+  Bets* bets = (Bets*)malloc(mem_size);
+  if ( !bets ) {
+    return nullptr;
   }
 
-  b->size = size;
-
-  for ( int i = 0; i < size; i++ )
-  {
-    b->bets[i] = 0.0f;
+  bets->size = size;
+  for (int i = 0; i < size; i++) {
+    bets->values[i] = 0; 
   }
-  return b;
+
+  return bets;
 }
 
-void destroy_bets(Bets* b)
+void destroy_bets(Bets* bets)
 {
-  if ( b != NULL ) {
-    free(b);
+  if ( bets ) {
+    free(bets);
   }
+}
+
+void bets_erase(Bets* bets)
+{
+  if ( !bets ) {
+    return;
+  }
+  for (int i = 0; i < bets->size; i++) {
+    bets->values[i] = 0;
+  }
+}
+
+void bets_set(Bets* bets, int index, int amount)
+{
+  if ( !bets ) {
+    return;
+  }
+  if ( index < 0 || index >= bets->size ) {
+    return;
+  }
+  bets->values[index] = amount;
+}
+
+int bets_get(Bets* bets, int index)
+{
+  if ( !bets ) {
+    return -1;
+  }
+  if ( index < 0 || index >= bets->size ) {
+    return -1;
+  }
+  return bets->values[index];
+}
+
+int bets_total(Bets* bets)
+{
+  if ( !bets ) {
+    return -1;
+  }
+
+  int total = 0; 
+  for (int i = 0; i < bets->size; i++) {
+    total += bets->values[i];
+  }
+
+  return total;
 }

@@ -6,6 +6,7 @@
 # Folders
 build/
 src_new/
+src_old/
 .vscode/
 
 # User-specific files

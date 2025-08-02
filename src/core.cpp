@@ -1,13 +1,12 @@
 #include"core.h"
-#include"horses.h"
-#include"bets.h"
+#include"display.h"
+#include"input.h"
+#include"player.h"
+#include"bet_pool.h"
 
 #include<stdlib.h>
 #include<stdio.h>
-#include<string.h>
 #include<time.h>
-#include<assert.h>
-#include<cstdlib>
 
 namespace Game {
 
@@ -15,355 +14,124 @@ namespace Game {
   {
     INTRO = 0,
     MENU,
+    BET,
+    STATS,
     RACE,
     RESULT,
-    EXIT, 
-  };
-
-  enum class BetState
-  {
-    DONE = 0,
-    HORSE_PICK,
-    AMOUNT_PICK
-  };
-
-  struct Player
-  {
-    float balance = 500.00f;
-    float win_percentage = 0.0f;
-    float biggest_win = 0.0f;
-    int total_bets = 0;
-    int total_wins = 0;
-    Bets* bets = NULL;
+    EXIT 
   };
 
   struct Context
   {
-    Horse* horses = NULL;
-    int horse_count;
+    Player* player = nullptr;
+    Bots* bots = nullptr;
+    BetPool* pool = nullptr;
+    State state = State::INTRO;
   };
 
-  static const int MIN_HORSE_NUMBER = 3;
-
-  static int get_random_int(int min, int max)
+  static bool initialize_game(Context* ctx, int bot_count)
   {
-    assert(min <= max && "Invalid range!");
-    int range = max - min + 1;
-    int random = rand() % range;
-    return min + random; 
+    if (!(ctx->player = init_player())) return false;
+    if (!(ctx->bots = init_bots(bot_count))) return false;
+    if (!(ctx->pool = create_betpool())) return false;
+    return true;
   }
 
-  static int init_bets(Bets** b, int MAX_BETS)
+  static void clean_up(Context* ctx)
   {
-    *b = create_bets(MAX_BETS);
-    if ( b == NULL ) { return 1; }
-    else { return 0; }
+    destroy_bots(ctx->bots);
+    destroy_betpool(ctx->pool);
+    destroy_player(ctx->player);
   }
 
-  static void clean_up_player(Player* p)
+  static void intro(Context* ctx)
   {
-    destroy_bets(p->bets);
+    clear_screen();
+    display_intro();
+    int error = input_wait_for_enter();
+    if ( error ) { ctx->state = State::EXIT; }
+    ctx->state = State::MENU;
   }
 
-  static void clean_up_horses(Context* c)
+  static void menu(Context* ctx)
   {
-    free_horses(c->horses);
-    c->horses = NULL;
-    c->horse_count = 0;
-  }
+    clear_screen();
+    display_menu();
 
-  static void clean_up(Context* c, Player* p)
-  {
-    clean_up_horses(c);
-    clean_up_player(p);
-  }
+    int option = input_valid_option(1, 4);
+    if ( option < 0 ) { ctx->state = State::EXIT; } // FGETS ERROR
 
-  static int horse_gen(Context* c)
-  {
-    if ( c->horses == NULL )
+    switch(option)
     {
-      int count = get_random_int(MIN_HORSE_NUMBER, total_horse_count());
-      c->horses = generate_horses(count);
-      if ( c->horses == NULL ) { puts("Horses mem alloc failed!"); return 0; }
-      c->horse_count = count;
-    }
-    return 1;
+      case 1: ctx->state = State::RACE; break;
+      case 2: ctx->state = State::BET; break;
+      case 3: ctx->state = State::STATS; break;
+      case 4: ctx->state = State::EXIT; break;
+      default: State::EXIT; break;
+    } 
   }
 
-  static int wait_for_enter()
+  static void stats(Context* ctx)
   {
-    // int c;
-    // while ((c = getchar()) != '\n' && c != EOF) {}
-    char buf[4];
-    printf("Press Enter to continue... ");
-    if ( !fgets(buf, sizeof(buf), stdin) )
+    clear_screen();
+    display_player_stats(ctx->player);
+
+    int error = input_wait_for_enter();
+    if ( error ) { ctx->state = State::EXIT; return; }
+    ctx->state = State::MENU;
+  }
+
+  static void bet(Context* ctx)
+  {
+    clear_screen();
+    regenerate_pool(ctx->pool);
+    display_bet_pool(ctx->pool);
+
+    int option = input_valid_option(1, ctx->pool->pool_count);
+    if ( option < 0 ) { ctx->state = State::EXIT; return; } //fgets error
+    int amount = input_get_amount(ctx->player->balance);
+    if ( amount < 0) { ctx->state = State::EXIT; return; } //fgets error
+    option--; // to array index
+
+    player_place_bet(ctx->player, option, amount);
+    player_pay(ctx->player, amount);
+
+    display_placed_bet(ctx->pool, option, amount);
+
+    int error = input_wait_for_enter();
+    if ( error ) { ctx->state = State::EXIT; return; }
+    ctx->state = State::MENU;
+  }
+
+  static void handle_states(Context* ctx)
+  {
+    switch(ctx->state)
     {
-      return 1;
-    }
-    return 0;
-  }
-
-  static State intro()
-  {
-    system("clear");
-    puts("==============================");
-    puts("=== HORSE BETTING SIM v0.5 ===");
-    puts("==============================");
-    
-    int error = wait_for_enter();
-    if ( error ) { return State::EXIT; }
-    return State::MENU;
-  }
-
-  static void show_available_horses(Context* c)
-  {
-    puts("Available Horses:");
-    puts("--------------------------------");
-    puts("# | Horse Name   | Odds  | Win %");
-    puts("--------------------------------");
-    for ( int i = 0; i < c->horse_count; i++ )
-    {
-      printf("%d ", (i + 1));
-      printf("| %s | %.2fx | %d% \n",
-              c->horses[i].name,
-              c->horses[i].odds,
-              c->horses[i].win_percentage);
+      case State::INTRO: intro(ctx); break;
+      case State::MENU: menu(ctx); break;
+      case State::BET: bet(ctx); break;
+      case State::STATS: stats(ctx); break;
+      case State::RACE: break;
+      case State::RESULT: break;
+      default: break;
     }
   }
 
-  static void show_balance(Player* p)
-  {
-    puts("--------------------------------");
-    printf("Your Wallet: %.2f$\n", p->balance);
-    puts("--------------------------------");
-  }
-
-  static State betting_screen(Player* p, Context* c)
-  {
-    if ( !horse_gen(c) ) { return State::EXIT; }
-
-    char input[100];
-    bool mistake = false;
-    int horse_choice = 0;
-    BetState s = BetState::HORSE_PICK;
-
-    while ( s != BetState::DONE )
-    {
-      system("clear");
-      show_available_horses(c);
-      show_balance(p);
-
-      if ( s == BetState::HORSE_PICK )
-      {
-        int min = 1;
-        int max = c->horse_count;
-        if ( mistake ) {
-          puts("Invalid choice, try again."); 
-          mistake = false; 
-        }
-        printf("Enter horse number you want to bet on [ %d-%d ]: ", min, max);
-        
-        if ( !fgets(input, sizeof(input), stdin) ) {
-          puts("FGETS ERROR! (CTRL + D probably)");
-          return State::EXIT;
-        }
-
-        char* end;
-        long value = strtol(input, &end, 10);
-        if ( value >= min && value <= max ) {
-          horse_choice = value - 1;
-          s = BetState::AMOUNT_PICK;
-        } else {
-          mistake = true;
-        }
-
-      } else if ( s == BetState::AMOUNT_PICK ) {
-
-        if ( mistake ) {
-          puts("Invalid input, try again."); 
-          mistake = false; 
-        }
-
-        printf("Enter bet amount: ");
-        if ( !fgets(input, sizeof(input), stdin) ) {
-          puts("FGETS ERROR! (CTRL + D probably)");
-          return State::EXIT;
-        }
-
-        for (int i = 0; input[i]; i++) {
-          if ( input[i] == ',' ) { input[i] = '.'; }
-        }
-
-        char* end;
-        double bet = strtod(input, &end);
-        if ( !bet ) { // something went wrong
-          mistake = true;
-          continue;
-        } 
-        bet = (int)(100 * bet) / 100.0; // <- truncutate
-
-        if ( bet > p->balance ) {
-          puts("You don't have enough money!");
-          wait_for_enter();
-        }
-        else if (bet < 0) {
-          puts("You can't bet negative!");
-          wait_for_enter();
-        } else {
-          p->balance -= bet;
-          p->total_bets++;
-          bets_set(p->bets, bet, horse_choice);
-          bets_print(p->bets);
-          printf("=> Bet of $%.2f placed on %s\n=> [%.2fx odds]\n",
-            bet,
-            c->horses[horse_choice],
-            c->horses[horse_choice].odds); 
-          wait_for_enter();
-          s = BetState::DONE;
-        }                    
-      }
-    }
-    return State::MENU;
-  }
-  
-
-  static State start_race(Player* p, Context* c)
-  {
-    puts("Race started!");
-
-    int total = 0;
-    int percentages[c->horse_count] = {0};
-    for ( int i = 0; i < c->horse_count; i++ ) {
-      percentages[i] = c->horses[i].win_percentage;
-      total += c->horses[i].win_percentage;
-    }
-    assert((total == 100) && "Total is not 100!");
-
-    int grid[100] = {0};
-
-    int sum = 0;
-    int horse_id = 0;
-    total = percentages[horse_id];
-
-    while ( total != 100 ) {
-      grid[sum++] = horse_id;
-      if ( sum >= total ) {
-        total += percentages[++horse_id];
-      }
-    }
-    for ( int i = 0; i < percentages[horse_id]; ++i ) {
-      grid[sum++] = horse_id;
-    }
-
-    // Fisher-Yates shuffle algorithm!
-    for (int i = 99; i > 0; i--) {
-      int j = rand() % (i + 1);
-      int temp = grid[i];
-      grid[i] = grid[j];
-      grid[j] = temp;
-    }
-
-    int draw = rand() % 100;
-    int winner_horse = grid[draw];
-
-
-
-    int error = wait_for_enter();
-    if ( error ) { return State::EXIT; }
-    return State::MENU;
-  }
-
-  static State show_results(const Player* p)
-  {
-    return State::EXIT;
-  }
-
-  static State show_stats(const Player* p)
-  {
-    system("clear");
-
-    puts("Player Stats:");
-    puts("=================");
-    printf("Balance: %.2f$\n", p->balance);
-    printf("Total Wins: %d\n", p->total_wins);
-    printf("Total Bets: %d\n", p->total_bets);
-    printf("Success Rate: %.2f\n%", p->win_percentage);
-    printf("Biggest Win: %.2f$\n", p->biggest_win);
-    puts("=================");
-
-    int error = wait_for_enter();
-    if ( error ) { return State::EXIT; }
-    return State::MENU;
-  }
-
-  static State handle_menus(Player* p, Context* c) 
-  {
-    // clean_up_horses(c); // << here for the debug;
-
-    char input[100];
-    bool mistake = false;
-    while ( true )
-    {
-      system("clear");
-      puts("=== Main menu ===");
-      puts("[1] Start Race");
-      puts("[2] Place a Bet");
-      puts("[3] Your stats");
-      puts("[4] Quit");
-      if ( mistake ) {
-        puts("Invalid input! Try again. [1-4]");
-        mistake = false;
-      }
-      printf("Choose your option: ");
-
-      if ( !fgets(input, sizeof(input), stdin) ) {
-        puts("FGETS ERROR! (CTRL + D probably)");
-        return State::EXIT;
-      }
-
-      input[strcspn(input, "\n")] = 0; // remove first occurance of newline
-      if( strlen(input) == 1 ) {
-        switch (input[0])
-        {
-          case '1': return State::RACE;
-          case '2': return betting_screen(p, c);
-          case '3': return show_stats(p);
-          case '4': return State::EXIT;
-          default: mistake = true; break;
-        }
-      } else {
-        mistake = true;
-      }
-    }
-  }
-
-  static State handle_states(State s, Player* p, Context* c)
-  {
-    switch(s)
-    {
-      case State::INTRO: return intro();
-      case State::MENU: return handle_menus(p, c);
-      case State::RACE: return start_race(p, c);
-      case State::RESULT: return show_results(p);
-      default: return intro();
-    }
-  }
-
-  void run() 
+  int run(int bot_count)
   {
     srand(time(NULL));
 
-    Context c;
-    Player p;
-    init_bets(&p.bets, total_horse_count());
-    
-    State current = State::INTRO;
-    while ( current != State::EXIT ) 
-    {
-      current = handle_states(current, &p, &c);
+    Context ctx;
+    if ( !initialize_game(&ctx, bot_count) ) {
+      return 1;
     }
-    clean_up(&c, &p);
-    puts("Thanks for playing!");
-  }
 
+    while ( ctx.state != State::EXIT ) {
+      handle_states(&ctx);
+    }
+
+    clean_up(&ctx);
+    puts("Thanks for playing!");
+    return 0;
+  }
 }

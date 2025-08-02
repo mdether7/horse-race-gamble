@@ -2,7 +2,7 @@
 #define HORSE_BET_SIM_H
 
 namespace Game {
-  void run();
+  int run(int bot_count);
 }
 
 #endif

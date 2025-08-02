@@ -4,13 +4,15 @@
 struct Bets
 {
   int size;
-  float bets[];
+  int values[];
 };
 
 Bets* create_bets(int size);
-void destroy_bets(Bets* b);
-void bets_reset(Bets* b);
-void bets_print(Bets* b);
-void bets_set(Bets* b, float amount, int index);
+void destroy_bets(Bets* bets);
+
+void bets_erase(Bets* bets);
+void bets_set(Bets* bets, int index, int amount);
+int bets_get(Bets* bets, int index);
+int bets_total(Bets* bets);
 
 #endif

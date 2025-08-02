@@ -1,0 +1,78 @@
+#include"display.h"
+#include"player.h"
+#include"bet_pool.h"
+#include<stdio.h>
+
+void display_intro()
+{
+  puts("==============================");
+  puts("=== HORSE BETTING SIM v0.5 ===");
+  puts("==============================");
+}
+
+void display_menu()
+{
+  puts("=== Main menu ===");
+  puts("[1] Start Race");
+  puts("[2] Place a Bet");
+  puts("[3] Your stats");
+  puts("[4] Quit");
+}
+
+void display_player_stats(const Player* player)
+{
+  if ( !player ) {
+    return;
+  }
+  puts("Player Stats:");
+  puts("=================");
+  printf("Balance: %.2f$\n", (double)player->balance / 100);
+  printf("Total Wins: %d\n", player->total_wins);
+  printf("Total Bets: %d\n", player->total_bets);
+  printf("Success Rate: %d%\n", player->win_percentage);
+  printf("Biggest Win: %.2f$\n", (double)player->biggest_win / 100);
+  puts("=================");
+}
+
+void display_placed_bet(const BetPool* pool, int option, int amount)
+{
+  double dollar_money = (double)amount / 100;
+  printf("=> Bet of $%.2f placed on %s\n=> [%.2fx odds]\n", dollar_money,
+                                                            pool->horses[option].name,
+                                                            (double)pool->horses[option].odds / 100 );
+}
+
+void display_bet_pool(const BetPool* pool)
+{
+  if ( !pool ) {
+    return;
+  }
+  puts("Available Bets:");
+  puts("--------------------------------");
+  puts("# | Horse Name   | Odds  | Win %");
+  puts("--------------------------------");
+  for (int i = 0; i < pool->pool_count; i++) {
+    printf("%d ", (i + 1));
+    printf("| %s | %.2fx | %d% \n",
+               pool->horses[i].name,
+               (double)pool->horses[i].odds / 100,
+               pool->horses[i].win_percentage);
+  }
+  puts("--------------------------------");
+}
+
+void clear_screen() {
+  printf("\033[2J\033[H");
+}
+
+  // void get_cursor_position(int* rows, int* cols) {
+  //   // Request cursor position
+  //   printf("\033[6n");
+  //   fflush(stdout);
+
+  //   // Expected response: ESC [ rows ; cols R
+  //   if (scanf("\033[%d;%dR", rows, cols) != 2) {
+  //       *rows = -1;
+  //       *cols = -1;
+  //   }
+  // }
