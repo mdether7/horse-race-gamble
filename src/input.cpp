@@ -1,5 +1,6 @@
 #include"input.h"
 #include<stdio.h>
+#include<string.h>
 #include<stdlib.h>
 #include<limits.h>
 #include<cassert>
@@ -12,6 +13,33 @@ int input_wait_for_enter()
     return 1;
   }
   return 0;
+}
+
+bool input_get_yes_no(const char* message)
+{
+  char input[100];
+  while ( true )
+  {
+    printf("%s [y/n]:", message);
+    if ( !fgets(input, sizeof(input), stdin) ) {
+      puts("FGETS ERROR! (CTRL + D probably)");
+      return false;
+    }
+
+    input[strcspn(input, "\n")] = 0; // remove first occurrence of newline
+    if ( strlen(input) == 1 ) {
+      switch (input[0])
+      {
+        case 'Y':
+        case 'y': return true;
+        case 'N':
+        case 'n': return false;
+        default: puts("Invalid input!"); continue;
+      }
+    } else {
+      puts("Invalid input!");
+    }
+  }
 }
 
 int input_valid_option(int first, int last)
@@ -49,8 +77,8 @@ int input_valid_option(int first, int last)
   }
 }
 
-int input_get_amount(int max)
-{
+int input_get_amount(int max) // [ TODO ] => does not work correctly when eg: 0,22; ( first part is zero)
+{ 
   char input[100];
   while (true) {
       printf("Type amount: ");

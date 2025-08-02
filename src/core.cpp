@@ -2,6 +2,7 @@
 #include"display.h"
 #include"race.h"
 #include"input.h"
+#include"bets.h"
 #include"player.h"
 #include"bet_pool.h"
 
@@ -96,9 +97,17 @@ namespace Game {
 
     int option = input_valid_option(1, ctx->pool->pool_count);
     if ( option < 0 ) { ctx->state = State::EXIT; return; } //fgets error
+    option--; // to array index
+    if ( bet_placed(ctx->player->placed_bets, option) ) {
+      if (input_get_yes_no("Are you sure you want to override this bet?")) {
+        // return funds from previous bet;
+        player_add_balance(ctx->player, ctx->player->placed_bets->values[option]);
+      } else {
+        ctx->state = State::BET; return;
+      }
+    }
     int amount = input_get_amount(ctx->player->balance);
     if ( amount < 0) { ctx->state = State::EXIT; return; } //fgets error
-    option--; // to array index
 
     player_place_bet(ctx->player, option, amount);
     player_sub_balance(ctx->player, amount);
@@ -119,6 +128,8 @@ namespace Game {
     int winner = race_determine_winner(ctx->pool);
 
     printf("1st Place: %s\n", ctx->pool->horses[winner].name);
+
+    player_reset_placed_bets(ctx->player);
     ctx->should_regenerate = true;
 
     int error = input_wait_for_enter();

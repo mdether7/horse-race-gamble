@@ -73,6 +73,7 @@ void display_placed_bet(const BetPool* pool, int option, int amount)
   printf("=> Bet of $%.2f placed on %s\n=> [%.2fx odds]\n", dollar_money,
                                                             pool->horses[option].name,
                                                             (double)pool->horses[option].odds / 100 );
+  printf("=> Potential win [ $%.2f ]\n", (double)(amount * pool->horses[option].odds) / 10000);
 }
 
 void display_bet_pool(const BetPool* pool)

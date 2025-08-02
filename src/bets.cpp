@@ -35,6 +35,11 @@ void bets_erase(Bets* bets)
   }
 }
 
+bool bet_placed(Bets* bets, int index)
+{
+  return bets->values[index] != 0;
+}
+
 void bets_set(Bets* bets, int index, int amount)
 {
   if ( !bets ) {
