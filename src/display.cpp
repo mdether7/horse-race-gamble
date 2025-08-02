@@ -34,6 +34,14 @@ void display_player_stats(const Player* player)
   puts("=================");
 }
 
+void display_balance(const Player* player)
+{
+  double dollar_money = (double)player->balance / 100;
+  puts("--------------------------------");
+  printf("Your Wallet: %.2f$\n", dollar_money);
+  puts("--------------------------------");
+}
+
 void display_placed_bet(const BetPool* pool, int option, int amount)
 {
   double dollar_money = (double)amount / 100;

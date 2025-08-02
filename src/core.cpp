@@ -67,7 +67,7 @@ namespace Game {
       case 2: ctx->state = State::BET; break;
       case 3: ctx->state = State::STATS; break;
       case 4: ctx->state = State::EXIT; break;
-      default: State::EXIT; break;
+      default: ctx->state = State::EXIT; break;
     } 
   }
 
@@ -83,9 +83,11 @@ namespace Game {
 
   static void bet(Context* ctx)
   {
-    clear_screen();
     regenerate_pool(ctx->pool);
+
+    clear_screen();
     display_bet_pool(ctx->pool);
+    display_balance(ctx->player);
 
     int option = input_valid_option(1, ctx->pool->pool_count);
     if ( option < 0 ) { ctx->state = State::EXIT; return; } //fgets error
@@ -103,6 +105,15 @@ namespace Game {
     ctx->state = State::MENU;
   }
 
+  static void race(Context* ctx)
+  {
+    puts("RACE!");
+
+    int error = input_wait_for_enter();
+    if ( error ) { ctx->state = State::EXIT; return; }
+    ctx->state = State::MENU;
+  }
+
   static void handle_states(Context* ctx)
   {
     switch(ctx->state)
@@ -111,7 +122,7 @@ namespace Game {
       case State::MENU: menu(ctx); break;
       case State::BET: bet(ctx); break;
       case State::STATS: stats(ctx); break;
-      case State::RACE: break;
+      case State::RACE: race(ctx); break;
       case State::RESULT: break;
       default: break;
     }
