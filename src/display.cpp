@@ -59,6 +59,13 @@ void display_race_header()
   puts("============================");
 }
 
+void display_result_header()
+{
+  puts("=====================");
+  puts("HERE ARE THE RESULTS!");
+  puts("=====================");
+}
+
 void display_balance(const Player* player)
 {
   double dollar_money = (double)player->balance / 100;
