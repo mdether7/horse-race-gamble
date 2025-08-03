@@ -2,7 +2,7 @@
 
 Terminal-based horse racing gambling game.   
 Still need to add bots' betting simulation, but the core gameplay loop is mostly done.  
-Any critique, suggestions, or help are very welcome — feel free to open issues or submit pull requests.   
+Any critique, suggestions, or help are very welcome!   
 Thanks for checking it out!  
 
 Here are some screenshots:  
